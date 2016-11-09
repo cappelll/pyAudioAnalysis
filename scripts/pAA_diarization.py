@@ -125,14 +125,18 @@ def main():
 
     parser = argparse.ArgumentParser(description='pyAudioAnalysis Diarization.')
     parser.add_argument('-a','--audio', help='Input audio file', default=None)
-    parser.add_argument('--audio-list', help='Input audio file list', default=None)
-    parser.add_argument('-o','--outdir', help='Output directory', required=True)
+    parser.add_argument('--input-list', help='Input file list', default=None)
+    parser.add_argument('-o','--outdir', help='Output directory', default=None)
     parser.add_argument('-n','--speaker-number', help='Output directory', type=int, default=0)
     parser.add_argument("--lda", help="FLsD value", type=int, default=0)
     parser.add_argument('--ref', help='Reference file', default=None)
     parser.add_argument('--ref-list', help='Reference file', default=None)
     parser.add_argument("--plot", help="Plot", action="store_true", default=False)
 
+    parser.add_argument('--input', help='Input audio file', default=None)
+    parser.add_argument('--config', help='Does NOTHING for now', default=None)
+    parser.add_argument("--keepall", help="Does NOTHING for now", nargs='*', default=False)
+    parser.add_argument('--workdir', help='Output directory', default=None)
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -140,9 +144,16 @@ def main():
 
     args = parser.parse_args()
 
-    fInAudioName = args.audio
+    assert any((args.outdir, args.workdir)), "Either --outdir or --workdir has to be used. Abort"
 
-    fInAudioLstName = args.audio_list
+    if args.workdir is not None and args.outdir is None:
+        args.outdir = args.workdir
+
+    if args.input is not None and args.audio is None:
+        args.audio = args.input
+
+    fInAudioName = args.audio
+    fInAudioLstName = args.input_list
     pOut = args.outdir
     numberOfSpeakers = args.speaker_number
     fInRefName = args.ref
@@ -171,7 +182,7 @@ def main():
             refs = None
 
         for k in audios:
-
+            print k
             dia.diarization(audios[k])
 
             if refs is not None and k in refs:
