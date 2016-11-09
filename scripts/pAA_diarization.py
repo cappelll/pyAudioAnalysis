@@ -11,6 +11,7 @@ sys.path.append(pathToAdd)
 import audioSegmentation as aS
 
 pathToAdd = os.path.join(os.path.dirname(sys.argv[0]), "../../recordsure/experiments/share/")
+#pathToAdd = os.path.join(os.path.dirname(sys.argv[0]), "../../../../software/experiments-master-live/share/")
 sys.path.append(pathToAdd)
 
 from lsdpylib import lsdutils
@@ -100,7 +101,7 @@ class Diarization():
             self.DIAs[fName] = os.path.join(self.pOut, fName + ".diarization.json")
             self.DERs[fName] = os.path.join(self.pOut, fName + ".DER.json")
 
-
+        print self.DIAs[fName]
         self.CLRs[fName] = aS.speakerDiarization(fInAudioName, self.numberOfSpeakers[fName], mtStep=self.mtStep, LDAdim=self.LDAdim, PLOT=self.doPlot)
         _times, _speakers = aS.flags2segs(self.CLRs[fName], self.mtStep)
         slices = [ slicelib.Slice(start=_s, end=_e, label="S{}".format(int(_sp))) for (_s, _e), _sp in zip(_times, _speakers)]
@@ -152,6 +153,7 @@ def main():
     mtStep = 0.1
 
 
+    print "Diarization"
     dia = Diarization(pOut=pOut, mtStep=mtStep, LDAdim=LDAdim, doPlot=doPlot)
 
     if fInAudioName is not None:
@@ -165,12 +167,14 @@ def main():
 
         if fInRefLstName is not None:
             refs = lsdutils.getFIlesFromList(fInRefLstName)
+        else:
+            refs = None
 
         for k in audios:
 
             dia.diarization(audios[k])
 
-            if refs and k in refs:
+            if refs is not None and k in refs:
                 dia.scoring(refs[k], k, parser)
 
 
