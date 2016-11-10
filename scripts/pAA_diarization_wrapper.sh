@@ -13,6 +13,6 @@ else
     echo venv does NOT exist
 fi
 
-echo ${pAA_scrip_DIR}/pAA_diarization.py $@
+${pAA_scrip_DIR}/pAA_diarization.py $@
 
 
