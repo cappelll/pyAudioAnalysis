@@ -913,7 +913,7 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize=2.0, mtStep=0.2, stWin=0.
         if PLOT:
             ax1.plot(numpy.array(range(len(flagsGT)))*mtStep+mtStep/2.0, flagsGT, 'r')
         purityClusterMean, puritySpeakerMean = evaluateSpeakerDiarization(cls, flagsGT)
-        print "{0:.1f}\t{1:.1f}".format(100*purityClusterMean, 100*puritySpeakerMean)
+#        print "{0:.1f}\t{1:.1f}".format(100*purityClusterMean, 100*puritySpeakerMean)
         if PLOT:
             plt.title("Cluster purity: {0:.1f}% - Speaker purity: {1:.1f}%".format(100*purityClusterMean, 100*puritySpeakerMean) )
     if PLOT:
