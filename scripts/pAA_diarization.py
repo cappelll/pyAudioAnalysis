@@ -103,13 +103,10 @@ class Diarization():
 
         print self.DIAs[fName]
 
-        try:
-            self.CLRs[fName] = aS.speakerDiarization(fInAudioName, self.numberOfSpeakers[fName], mtStep=self.mtStep, LDAdim=self.LDAdim, PLOT=self.doPlot)
-            _times, _speakers = aS.flags2segs(self.CLRs[fName], self.mtStep)
-            slices = [ slicelib.Slice(start=_s, end=_e, label="S{}".format(int(_sp))) for (_s, _e), _sp in zip(_times, _speakers)]
-            slicelib.writeJson(slices, self.DIAs[fName])
-        except MemoryError,e:
-            print str(e)
+        self.CLRs[fName] = aS.speakerDiarization(fInAudioName, self.numberOfSpeakers[fName], mtStep=self.mtStep, LDAdim=self.LDAdim, PLOT=self.doPlot)
+        _times, _speakers = aS.flags2segs(self.CLRs[fName], self.mtStep)
+        slices = [ slicelib.Slice(start=_s, end=_e, label="S{}".format(int(_sp))) for (_s, _e), _sp in zip(_times, _speakers)]
+        slicelib.writeJson(slices, self.DIAs[fName])
 
         return fName
 
