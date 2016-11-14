@@ -4,6 +4,8 @@ import sys
 import copy
 import os
 import argparse
+from datetime import datetime
+#import subprocess
 
 pathToAdd = os.path.join(os.path.dirname(sys.argv[0]), "../../pyAudioAnalysis/")
 sys.path.append(pathToAdd)
@@ -63,10 +65,15 @@ class Diarization():
         self.DERs = {}
         self.CLRs = {}
         self.DIAs = {}
+        self.runtimes = {}
+        self.RTFs = {}
         self.pAAScores = {}
 
 #        self._defaultsDERParser()
 
+    def printStats(self):
+        for fName in self.CLRs:
+            print fName, self.runtimes[fName], self.RTFs[fName]
 
     def _defaultsDERParser(self, collar=0.0):
 
@@ -103,10 +110,19 @@ class Diarization():
 
         print self.DIAs[fName]
 
+        _startTime = datetime.now()
+
         self.CLRs[fName] = aS.speakerDiarization(fInAudioName, self.numberOfSpeakers[fName], mtStep=self.mtStep, LDAdim=self.LDAdim, PLOT=self.doPlot)
         _times, _speakers = aS.flags2segs(self.CLRs[fName], self.mtStep)
         slices = [ slicelib.Slice(start=_s, end=_e, label="S{}".format(int(_sp))) for (_s, _e), _sp in zip(_times, _speakers)]
         slicelib.writeJson(slices, self.DIAs[fName])
+
+        _endTime = datetime.now()
+        self.runtimes[fName] = (_endTime - _startTime).total_seconds()
+
+#        _length = subproces.check_output(["soxi", "-D", fInAudioName])
+        _length = len(self.CLRs[fName]) *  self.mtStep
+        self.RTFs[fName] = self.runtimes[fName] / _length
 
         return fName
 
@@ -189,6 +205,8 @@ def main():
             if refs is not None and k in refs:
                 dia.scoring(refs[k], k, parser)
 
+
+    dia.printStats()
 
 if __name__ == "__main__":
     main()
