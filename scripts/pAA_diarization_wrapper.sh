@@ -15,4 +15,7 @@ fi
 
 ${pAA_scrip_DIR}/pAA_diarization.py $@
 
+if [ -f $ACTIVATE ]; then
+    deactivate
+fi
 
