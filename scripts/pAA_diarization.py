@@ -4,6 +4,8 @@ import sys
 import copy
 import os
 import argparse
+import cProfile
+import pstats
 from datetime import datetime
 #import subprocess
 
@@ -68,6 +70,9 @@ class Diarization():
         self.runtimes = {}
         self.RTFs = {}
         self.pAAScores = {}
+        self.pAAStats = {}
+
+        self.pr = cProfile.Profile()
 
 #        self._defaultsDERParser()
 
@@ -103,16 +108,28 @@ class Diarization():
         if self.pOut is None:
             self.DIAs[fName] = None
             self.DERs[fName] = None
+            self.pAAStats[fName] = None
 
         else:
             self.DIAs[fName] = os.path.join(self.pOut, fName + ".diarization.json")
             self.DERs[fName] = os.path.join(self.pOut, fName + ".DER.json")
+            self.pAAStats[fName] = os.path.join(self.pOut, fName + ".stats")
 
         print self.DIAs[fName]
 
         _startTime = datetime.now()
 
+        self.pr.enable()
         self.CLRs[fName] = aS.speakerDiarization(fInAudioName, self.numberOfSpeakers[fName], mtStep=self.mtStep, LDAdim=self.LDAdim, PLOT=self.doPlot)
+        self.pr.disable()
+
+        if self.pAAStats[fName]:
+            fStatOut = open(self.pAAStats[fName], 'w')
+        else:
+            fStatOut = sys.stdout
+
+        ps = pstats.Stats(self.pr, stream=fStatOut)
+        ps.print_stats()
         _times, _speakers = aS.flags2segs(self.CLRs[fName], self.mtStep)
         slices = [ slicelib.Slice(start=_s, end=_e, label="S{}".format(int(_sp))) for (_s, _e), _sp in zip(_times, _speakers)]
         slicelib.writeJson(slices, self.DIAs[fName])
