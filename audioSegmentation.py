@@ -3,6 +3,7 @@ import sklearn.cluster
 import time
 import scipy
 import os
+import sys
 import audioFeatureExtraction as aF
 import audioTrainTest as aT
 import audioBasicIO
@@ -24,7 +25,7 @@ import glob
 def getAllDistances(M):
     sums = numpy.zeros(M.T.shape[0]);
     for i in range(M.T.shape[0]):
-       sums[i]= numpy.sum(numpy.linalg.norm(M.T-M.T[i],axis=1))
+        sums[i]= numpy.sum(numpy.linalg.norm(M.T-M.T[i],axis=1))
     return sums;
 
 
@@ -713,7 +714,6 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize=2.0, mtStep=0.2, stWin=0.
     [Classifier2, MEAN2, STD2, classNames2, mtWin2, mtStep2, stWin2, stStep2, computeBEAT2] = aT.loadKNNModel(fInKNNSpeakerFemaleMale)
 
     [MidTermFeatures, ShortTermFeatures] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, mtStep * Fs, round(Fs * stWin), round(Fs*stWin * 0.5))
-
     MidTermFeatures2 = numpy.zeros((MidTermFeatures.shape[0] + len(classNames1) + len(classNames2), MidTermFeatures.shape[1]))
 
     for i in range(MidTermFeatures.shape[1]):
@@ -768,6 +768,7 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize=2.0, mtStep=0.2, stWin=0.
 
     # LDA dimensionality reduction:
     if LDAdim > 0:
+        print "LDAdim"
         #[mtFeaturesToReduce, _] = aF.mtFeatureExtraction(x, Fs, mtSize * Fs, stWin * Fs, round(Fs*stWin), round(Fs*stWin));
         # extract mid-term features with minimum step:
         mtWinRatio = int(round(mtSize / stWin))
@@ -880,10 +881,10 @@ def speakerDiarization(fileName, numOfSpeakers, mtSize=2.0, mtStep=0.2, stWin=0.
         startprob, transmat, means, cov = trainHMM_computeStatistics(MidTermFeaturesNormOr, cls)
         hmm = hmmlearn.hmm.GaussianHMM(startprob.shape[0], "diag")            # hmm training        
         hmm.startprob_ = startprob
-        hmm.transmat_ = transmat            
+        hmm.transmat_ = transmat
         hmm.means_ = means; hmm.covars_ = cov
-        cls = hmm.predict(MidTermFeaturesNormOr.T)                    
-    
+        cls = hmm.predict(MidTermFeaturesNormOr.T)
+
     # Post-process method 2: median filtering:
     cls = scipy.signal.medfilt(cls, 13)
     cls = scipy.signal.medfilt(cls, 11)

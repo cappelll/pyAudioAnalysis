@@ -555,16 +555,17 @@ def stFeatureExtraction(signal, Fs, Win, Step):
     numOfChromaFeatures = 13
     totalNumOfFeatures = numOfTimeSpectralFeatures + nceps + numOfHarmonicFeatures + numOfChromaFeatures
 #    totalNumOfFeatures = numOfTimeSpectralFeatures + nceps + numOfHarmonicFeatures
-    stFeatures = numpy.array([], dtype=numpy.float64)
+#    stFeatures = numpy.array([], dtype=numpy.float64)
+    stFeatures = numpy.empty([totalNumOfFeatures, (N - Win)/ Step + 1], dtype=numpy.float64)
 
     while (curPos + Win - 1 < N):                        # for each short-term window until the end of signal
-        countFrames += 1
+
         x = signal[curPos:curPos+Win]                    # get current window
         curPos = curPos + Step                           # update window position
         X = abs(fft(x))                                  # get fft magnitude
         X = X[0:nFFT]                                    # normalize fft
         X = X / len(X)
-        if countFrames == 1:
+        if countFrames == 0:
             Xprev = X.copy()                             # keep previous fft mag (used in spectral flux)
         curFV = numpy.zeros((totalNumOfFeatures, 1))
         curFV[0] = stZCR(x)                              # zero crossing rate
@@ -592,11 +593,17 @@ def stFeatureExtraction(signal, Fs, Win, Step):
 #            print numpy.nonzero(chromaF > 5*chromaF.mean())[0].shape[0]
         #HR, curFV[numOfTimeSpectralFeatures+nceps] = stHarmonic(x, Fs)
         # curFV[numOfTimeSpectralFeatures+nceps+1] = freq_from_autocorr(x, Fs)
-        if countFrames == 1:
-            stFeatures = curFV                                        # initialize feature matrix (if first frame)
-        else:
-            stFeatures = numpy.concatenate((stFeatures, curFV), 1)    # update feature matrix
+
+        stFeatures[:,countFrames] = numpy.ravel(curFV)
+
+#        if countFrames == 0:
+#            stFeatures = curFV                                        # initialize feature matrix (if first frame)
+#        else:
+#            stFeatures = numpy.concatenate((stFeatures, curFV), 1)    # update feature matrix
+
+
         Xprev = X.copy()
+        countFrames += 1
 
     return numpy.array(stFeatures)
 
@@ -609,33 +616,41 @@ def mtFeatureExtraction(signal, Fs, mtWin, mtStep, stWin, stStep):
     mtWinRatio = int(round(mtWin / stStep))
     mtStepRatio = int(round(mtStep / stStep))
 
-    mtFeatures = []
-
     stFeatures = stFeatureExtraction(signal, Fs, stWin, stStep)
-    numOfFeatures = len(stFeatures)
+
+    numOfFeatures = stFeatures.shape[0]
     numOfStatistics = 2
 
-    mtFeatures = []
-    #for i in range(numOfStatistics * numOfFeatures + 1):
-    for i in range(numOfStatistics * numOfFeatures):
-        mtFeatures.append([])
+    mtFeatures2 = numpy.empty([numOfStatistics * stFeatures.shape[0], stFeatures.shape[1]/mtStepRatio +1])
+
+#    mtFeatures = []
+#    for i in range(numOfStatistics * numOfFeatures):
+#        mtFeatures.append([])
 
     for i in range(numOfFeatures):        # for each of the short-term features:
         curPos = 0
         N = len(stFeatures[i])
+
+        n = 0
         while (curPos < N):
+
             N1 = curPos
             N2 = curPos + mtWinRatio
             if N2 > N:
                 N2 = N
             curStFeatures = stFeatures[i][N1:N2]
 
-            mtFeatures[i].append(numpy.mean(curStFeatures))
-            mtFeatures[i+numOfFeatures].append(numpy.std(curStFeatures))
+#            mtFeatures[i].append(numpy.mean(curStFeatures))
+#            mtFeatures[i+numOfFeatures].append(numpy.std(curStFeatures))
+
+            mtFeatures2[i][n] = numpy.mean(curStFeatures)
+            mtFeatures2[i+numOfFeatures][n] = numpy.std(curStFeatures) 
+            n += 1
             #mtFeatures[i+2*numOfFeatures].append(numpy.std(curStFeatures) / (numpy.mean(curStFeatures)+0.00000010))
             curPos += mtStepRatio
 
-    return numpy.array(mtFeatures), stFeatures
+#    return numpy.array(mtFeatures), stFeatures
+    return mtFeatures2, stFeatures
 
 
 # TODO
